@@ -1,0 +1,27 @@
+---
+- name: Configure macOs-based instance
+  hosts: all
+  vars:
+    password: "" # Password for the user "ec2-user"
+
+  tasks:
+    - name: Validate password
+      assert:
+        that:
+          - password is defined
+          - password | length > 0
+        fail_msg: "Incorrect password"
+
+    - name: Add password for ec2-user
+      become: yes
+      become_user: root
+      user:
+        name: ec2-user
+        state: present
+        update_password: always
+        password: "{{ password }}"
+
+    - name: Enable VNC
+      become: yes
+      become_user: root
+      shell: /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -activate -configure -access -on -clientopts -setvnclegacy -vnclegacy yes -clientopts -setvncpw -restart -agent -privs -all
